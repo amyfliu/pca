@@ -17,6 +17,7 @@ for (i in 1:100) {
 head(data.matrix)
 dim(data.matrix)
 
+test <- t(data.matrix)
 pca <- prcomp(t(data.matrix), scale=TRUE) 
 
 ## plot pc1 and pc2
