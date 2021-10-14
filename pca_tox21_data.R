@@ -20,24 +20,33 @@ final_data_2 <- as.data.frame(sapply(final_data[, -1], as.numeric))
 #NOTE: column 1 with CAS ID is excluded
 
 #rejoin the CAS ID and bioassay data into a data frame 
-final_data_3 <- data.frame(final_data$Structure_ID, final_data_2) 
+final_data_3 =
+  data.frame(final_data$Structure_ID, final_data_2) %>% 
+  janitor::clean_names() %>% 
+  rename(structure_id = final_data_structure_id)%>% 
+  mutate(num_zero = rowSums(. == 0)) %>% 
+  filter(num_zero < 162) %>% 
+  select(-num_zero)
 
-
+########################## END OF DATA CLEANING ###############################
 
 #PCA ANALSYSIS 
 pca <- prcomp(final_data_3[,-1], scale = TRUE)
 
 #plot pc1 and pc2
-plot(pca$x[,1], pca$x[,2])
+plot(pca$x[,1], pca$x[,2]) #NOT VERY HELPFUL... 
 
 #make scree plot 
-pca.var <- pca$sdev^2
+pca.var <- pca$sdev^2 #variance
 pca.var.percent <- round(pca.var/sum(pca.var)*100, 1)
 barplot(pca.var.percent, xlab = "Principal component", ylab = "% variation", main= "Scree plot")
 
+pca.var.percent[1:10]
+
+
 #Use ggplot and make a fancier plot 
-pca.data <- data.frame(Sample=final_data_3$final_data.Structure_ID,
-                       X=pca$x[,1],
+pca.data <- data.frame(Sample=final_data_3$structure_id,
+                       X=pca$x[,1], #gives us the pca scores (i.e, the linear combinations)
                        Y=pca$x[,2])
 pca.data
 
@@ -54,12 +63,15 @@ assay_scores <- abs(loading_scores) ## get the magnitudes
 assay_score_ranked <- sort(assay_scores, decreasing=TRUE)
 top_20_assay <- names(assay_score_ranked[1:20]) #top 20
 
-top_20_assay ## show the names of the top bioassay
+top_20_assay ## show the names of the top bioassay that dominate the 1st principle component 
+pca$rotation[top_20_assay, 1] #what 'variable/bioassay' dominates the first principle component?? and what are the weights
 
 #write the results to a file
 write.csv(top_20_assay, file = "top10_assay_PC3.csv")
 
 
+
+###### More exploring ####### 
 
 #find which bioassay points can be 'dropped'
 tox <- read_excel("~/Documents/Axle/clustering/SOM/axle_clustering/data/tox21_data.xlsx")
@@ -85,5 +97,10 @@ my_vec_2 <- my_vec/8971
 my_vec_2
 
 test3 <- sort(my_vec_2)
-sum(test3 > 0.85) #gives us the % of missing or null values 
+test3
 
+#check how many 0 or missing data there are
+sum(test3 > 0.75) #gives us the % of missing or null values 
+sum(test3 > 0.80)
+sum(test3 > 0.85)
+sum(test3 > 0.90)
