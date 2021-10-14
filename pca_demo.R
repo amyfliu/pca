@@ -1,5 +1,4 @@
-## In this example, the data is in a matrix called
-## data.matrix
+## In this example, the data is in a matrix called data.matrix
 ## columns are individual samples (i.e. cells)
 ## rows are measurements taken for all the samples (i.e. genes)
 data.matrix <- matrix(nrow=100, ncol=10)
@@ -11,27 +10,27 @@ rownames(data.matrix) <- paste("gene", 1:100, sep="")
 for (i in 1:100) {
   wt.values <- rpois(5, lambda=sample(x=10:1000, size=1))
   ko.values <- rpois(5, lambda=sample(x=10:1000, size=1))
-  
   data.matrix[i,] <- c(wt.values, ko.values)
 }
 head(data.matrix)
 dim(data.matrix)
 
-test <- t(data.matrix)
-pca <- prcomp(t(data.matrix), scale=TRUE) 
+test <- t(data.matrix) #transpose; switch rows and columns
+pca <- prcomp(test, scale=TRUE) 
+summary(pca)
 
 ## plot pc1 and pc2
-plot(pca$x[,1], pca$x[,2])
+plot(pca$x[,1], pca$x[,2]) #pca$x gives the PCA score of the variables
 
 ## make a scree plot
-pca.var <- pca$sdev^2
-pca.var.per <- round(pca.var/sum(pca.var)*100, 1)
+#note that `sum(pca.var)` gives us the total variation 
+pca.var <- pca$sdev^2 #st.deviation squared gives us the variance
+pca.var.per <- round(pca.var/sum(pca.var)*100, 1) #in percentages
 
 barplot(pca.var.per, main="Scree Plot", xlab="Principal Component", ylab="Percent Variation")
 
 ## now make a fancy looking plot that shows the Principal components and the % variation:
 library(ggplot2)
-
 pca.data <- data.frame(Sample=rownames(pca$x),
                        X=pca$x[,1],
                        Y=pca$x[,2])
@@ -45,7 +44,7 @@ ggplot(data=pca.data, aes(x=X, y=Y, label=Sample)) +
   ggtitle("My PCA Graph")
 
 ## get the name of the top 10 measurements (genes) that contribute most to pc1.
-loading_scores <- pca$rotation[,1]
+loading_scores <- pca$rotation[,1] #weight of each gene for Principal component #1
 gene_scores <- abs(loading_scores) ## get the magnitudes
 gene_score_ranked <- sort(gene_scores, decreasing=TRUE)
 top_10_genes <- names(gene_score_ranked[1:10])
