@@ -3,27 +3,25 @@ library(readxl)
 library(kohonen)
 library(tidyverse)
 library(factoextra)
-library(dplyr)
-library(ggplot2)
 
-#read the data
-tox21 <- read_excel("~/Documents/Axle/clustering/SOM/axle_clustering/data/tox21_data.xlsx")
+#read in the data
+tox21 <- read.delim("tox21_data.txt") #8,971 distinct compounds/drugs
 
 #Change rows with 'x' to NA and filter out drugs/chemicals with incomplete data using the complete.case()
 new_df <- tox21
 new_df[new_df == 'x'] <- NA  
 final_data <- new_df[complete.cases(new_df),] 
 
-#all columns are character, need to convert all columns to numerical
+#all columns are character, need to convert all columns to numerical for analysis
 #data frames are not "character" or "numerical", but COLUMNS are...
-final_data_2 <- as.data.frame(sapply(final_data[, -1], as.numeric)) 
-#NOTE: column 1 with CAS ID is excluded
+final_data_2 <- as.data.frame(sapply(final_data[-c(1,2)], as.numeric)) 
+#NOTE: column 1 and 2 is excluded
 
 #rejoin the CAS ID and bioassay data into a data frame 
 final_data_3 =
-  data.frame(final_data$Structure_ID, final_data_2) %>% 
+  data.frame(final_data$Structure.ID, final_data_2) %>% 
   janitor::clean_names() %>% 
-  rename(structure_id = final_data_structure_id)%>% 
+  rename(structure_id = final_data_structure_id) %>% 
   mutate(num_zero = rowSums(. == 0)) %>% 
   filter(num_zero < 162) %>% 
   select(-num_zero)
